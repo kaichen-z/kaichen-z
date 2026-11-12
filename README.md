@@ -1,9 +1,13 @@
 # Kaichen Zhou
 
-Postdoctoral researcher at **MIT & Harvard**. PhD from the **University of Oxford**.
+🔬 Postdoctoral researcher at **MIT & Harvard**.
 
-Interested in **4D Reconstruction, Generative AI, and Robot Learning**.
+🎓 PhD from the **University of Oxford**.
 
-[![Total GitHub Stars](https://img.shields.io/github/stars/kaichen-z?affiliations=OWNER&style=for-the-badge&label=Total%20Stars&color=gold)](https://github.com/kaichen-z?tab=repositories)
+🧠 Interested in **4D Reconstruction, Generative AI, and Robot Learning**.
 
-[Website](https://kaichen-z.github.io/)
+<!-- STARS:START -->
+🌟 **Total GitHub Stars: [1,561](https://github.com/kaichen-z?tab=repositories)**
+<!-- STARS:END -->
+
+🌐 [Website](https://kaichen-z.github.io/)
