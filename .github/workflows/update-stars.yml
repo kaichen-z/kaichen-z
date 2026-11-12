@@ -33,6 +33,7 @@ jobs:
           import json
           import re
           import subprocess
+          from decimal import Decimal, ROUND_HALF_UP
           
           
           def gh(*args, payload=None):
@@ -48,12 +49,13 @@ jobs:
           
           pages = gh("api", "--paginate", "--slurp", "users/kaichen-z/repos?type=owner&per_page=100")
           total = sum(repo["stargazers_count"] for page in pages for repo in page)
+          display = f"{(Decimal(total) / 1000).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)}K"
           path = "repos/kaichen-z/kaichen-z/contents/README.md"
           file = gh("api", path + "?ref=main")
           readme = base64.b64decode(file["content"]).decode("utf-8")
           replacement = (
               "<!-- STARS:START -->\n"
-              f"🌟 **Total GitHub Stars: [{total:,}](https://github.com/kaichen-z?tab=repositories)**\n"
+              f"🌟 **Total GitHub Stars: [{display}](https://github.com/kaichen-z?tab=repositories)**\n"
               "<!-- STARS:END -->"
           )
           updated, matches = re.subn(
@@ -62,16 +64,16 @@ jobs:
           if matches != 1:
               raise RuntimeError("Expected exactly one stars section; leaving README unchanged.")
           if updated == readme:
-              print(f"Star count is current: {total:,}")
+              print(f"Star count is current: {display}")
           else:
               gh(
                   "api", "--method", "PUT", path, "--input", "-",
                   payload={
-                      "message": f"Update total GitHub stars to {total:,}",
+                      "message": f"Update total GitHub stars to {display}",
                       "content": base64.b64encode(updated.encode("utf-8")).decode("ascii"),
                       "sha": file["sha"],
                       "branch": "main",
                   },
               )
-              print(f"Updated star count: {total:,}")
+              print(f"Updated star count: {display}")
           PYTHON
