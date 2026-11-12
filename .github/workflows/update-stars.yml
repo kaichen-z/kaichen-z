@@ -1,0 +1,77 @@
+name: Update total GitHub stars
+
+on:
+  schedule:
+    - cron: '17 13 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - README.md
+      - .github/workflows/update-stars.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-profile-stars
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.repository == 'kaichen-z/kaichen-z'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Refresh the plain-text star count
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 - <<'PYTHON'
+          import base64
+          import json
+          import re
+          import subprocess
+          
+          
+          def gh(*args, payload=None):
+              result = subprocess.run(
+                  ["gh", *args],
+                  input=json.dumps(payload) if payload is not None else None,
+                  capture_output=True,
+                  text=True,
+                  check=True,
+              )
+              return json.loads(result.stdout) if result.stdout.strip() else None
+          
+          
+          pages = gh("api", "--paginate", "--slurp", "users/kaichen-z/repos?type=owner&per_page=100")
+          total = sum(repo["stargazers_count"] for page in pages for repo in page)
+          path = "repos/kaichen-z/kaichen-z/contents/README.md"
+          file = gh("api", path + "?ref=main")
+          readme = base64.b64decode(file["content"]).decode("utf-8")
+          replacement = (
+              "<!-- STARS:START -->\n"
+              f"🌟 **Total GitHub Stars: [{total:,}](https://github.com/kaichen-z?tab=repositories)**\n"
+              "<!-- STARS:END -->"
+          )
+          updated, matches = re.subn(
+              r"<!-- STARS:START -->.*?<!-- STARS:END -->", replacement, readme, flags=re.DOTALL
+          )
+          if matches != 1:
+              raise RuntimeError("Expected exactly one stars section; leaving README unchanged.")
+          if updated == readme:
+              print(f"Star count is current: {total:,}")
+          else:
+              gh(
+                  "api", "--method", "PUT", path, "--input", "-",
+                  payload={
+                      "message": f"Update total GitHub stars to {total:,}",
+                      "content": base64.b64encode(updated.encode("utf-8")).decode("ascii"),
+                      "sha": file["sha"],
+                      "branch": "main",
+                  },
+              )
+              print(f"Updated star count: {total:,}")
+          PYTHON
